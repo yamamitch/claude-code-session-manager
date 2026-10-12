@@ -2,6 +2,8 @@
 
 [English](README.md) | 日本語
 
+![状態、セッション名、最終利用日、ディレクトリパスを並べたセッション一覧](docs/images/screenshot-ja.png)
+
 Claude Code CLI の全セッションを一覧して絞り込み、再開できる Windows 用ランチャー。
 起動中のセッションのうち、どれがユーザーの操作を待っているかも示す。
 

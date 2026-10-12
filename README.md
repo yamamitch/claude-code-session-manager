@@ -2,6 +2,8 @@
 
 English | [日本語](README.ja.md)
 
+![Session list with live status, session name, last used date and directory path](docs/images/screenshot-en.png)
+
 A Windows launcher that lists, filters and resumes every Claude Code CLI session, and shows which running ones need you.
 
 When you run Claude Code sessions in several projects at once, it gets hard to tell which terminal belongs to which task. This tool lists every session under `~/.claude/projects` and opens the one you pick with `claude --resume` as a tab of a single Windows Terminal window. Each project gets its own tab color and title, so you can see at a glance what every open tab is working on.
