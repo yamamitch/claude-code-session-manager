@@ -30,10 +30,12 @@
     PressEscAgainToQuit = 'Press Esc again to quit'
     # Enter or Ctrl+N on a session that was launched moments ago and is not recorded as running yet.
     LaunchInProgress   = 'Still starting; wait a moment'
-    Opened             = 'Opened in a new window'
+    # Opened, Attached and NewSessionOpened do not say "tab" or "window", because WindowMode
+    # decides which one is opened.
+    Opened             = 'Opened the session'
     Focused            = 'Brought its window to the front'
-    Attached           = 'Opened the background session in a new window'
-    NewSessionOpened   = 'Started a new session in a new window'
+    Attached           = 'Opened the background session'
+    NewSessionOpened   = 'Started a new session'
     CwdNotFound        = 'Working directory not found: {0}'
     LaunchFailed       = 'Failed to launch: {0}'
     InvalidSessionId   = 'Invalid session ID: {0}'
