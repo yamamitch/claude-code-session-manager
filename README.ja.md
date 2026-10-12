@@ -146,7 +146,7 @@ flowchart LR
 `WindowMode = 'windows'` にすると、従来どおりセッションごとに `cs-<セッション ID>` という名前の別ウィンドウで開く。
 
 タブは `wt.exe` の起動引数 (`--title` / `--tabColor` / `-d`) で、プロジェクトごとの色とタブ名を直接指定して開く。
-タブ方式では、同じプロジェクトのタブを区別できるよう、タブ名にセッション ID の先頭 8 桁を付ける (`claude_powershell #1a2b3c4d`)。
+タブ方式では、同じプロジェクトのタブを区別できるよう、タブ名にセッション ID の先頭 8 桁を付ける (`claude-code-session-manager #1a2b3c4d`)。
 `--suppressApplicationTitle` を付けるので、シェルや claude がタイトルを書き換えてもタブ名は変わらない。
 Windows Terminal のプロファイルは登録しないため、初めて開くプロジェクトでもすぐに色が反映される。
 `settings.json` には一切触れない。
