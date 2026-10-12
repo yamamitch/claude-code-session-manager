@@ -1,0 +1,25 @@
+name: test
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  pester:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # run-tests.ps1 falls back to .tmp\modules, which both pwsh and Windows PowerShell 5.1 can load.
+      - name: Install Pester
+        shell: pwsh
+        run: Save-Module -Name Pester -MinimumVersion 5.0 -Path .tmp\modules -Repository PSGallery -Force
+
+      - name: Run tests on pwsh and Windows PowerShell 5.1
+        shell: pwsh
+        run: ./run-tests.ps1

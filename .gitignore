@@ -1,0 +1,5 @@
+# Temporary design notes and test-only dependencies (Pester, etc.). Not committed.
+.tmp/
+
+# User settings (copied from config.example.psd1).
+config.psd1

@@ -1,0 +1,6 @@
+root = true
+
+# Windows PowerShell 5.1 reads a script or data file without a BOM in the system ANSI code page,
+# so non-ASCII text in them would be garbled. Keep the BOM so both 5.1 and 7 read them as UTF-8.
+[*.{ps1,psd1}]
+charset = utf-8-bom
