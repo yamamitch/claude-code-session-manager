@@ -23,7 +23,7 @@
     PreviewLabel       = 'Last prompt'
     PreviewEmpty       = '(none recorded)'
     KeyHelp            = '[Enter] Open  [Esc] Clear/Quit  [Shift+Tab] All/Latest  [Ctrl+N] New  [Ctrl+P] Pin  [Ctrl+D] Delete  [Ctrl+R] Reload'
-    # Appended to the count line to tell which view is shown (Shift+Tab switches them).
+    # Shown at the right end of the rule above the list to tell which view is shown (Shift+Tab switches them).
     ModeLatestPerDirectory = '[Latest per directory]'
     ModeAll            = '[All sessions]'
     # Shown after Esc on an empty search; a second Esc quits.

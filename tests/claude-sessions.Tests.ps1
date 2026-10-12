@@ -1,17 +1,16 @@
 ﻿#Requires -Version 5.1
 <#
 .SYNOPSIS
-    Pester tests for the pure functions in claude-sessions.ps1.
+    Pester tests for claude-sessions.ps1.
 
 .DESCRIPTION
-    Limited to functions whose input and output are deterministic (string formatting,
-    search, color selection). Functions that start processes or run the key input loop
-    (Get-SessionIndex, Start-ClaudeSession, Get-OpenSessionMap, Test-LaunchedByTool,
-    Get-ConsoleOwnerWindow, Show-OwnerWindow, Show-SessionMenu, etc.) would need heavy
-    mocking and are out of scope.
-    As an exception, Get-SessionFileInfoFast / Full / Get-SessionFileInfo do file I/O, but
-    synthetic files on TestDrive keep their input and output deterministic, so they are
-    covered (a regression test that the fast path and the full scan agree).
+    Covers pure functions (string formatting, search, color selection, etc.) and some
+    functions that handle files or processes: session file scanning, the index cache and
+    sending to the Recycle Bin use synthetic files on TestDrive, and window launching
+    (Start-ClaudeSession, Invoke-WindowsTerminal) mocks the wt.exe call and checks its
+    arguments. The key input loop (Show-SessionMenu) and detection of actually running
+    processes (Get-OpenSessionMap, Test-LaunchedByTool, Get-ConsoleOwnerWindow, etc.) are
+    out of scope.
     See the "Tests" section of README.md for how to run them.
 #>
 

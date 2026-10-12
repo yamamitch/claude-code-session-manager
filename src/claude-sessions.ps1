@@ -92,7 +92,8 @@ $script:Config = @{
     # Display width of the last-used column (16 columns for '2026/09/23 18:05').
     DateColumnWidth    = 16
     DateFormat         = 'yyyy/MM/dd HH:mm'
-    # Session names measured at most 36 columns, so anything beyond the cap goes to the path column.
+    # The session names measured were at most 36 columns wide, so this cap rarely truncates them
+    # and the width beyond it goes to the path column.
     TitleMaxWidth      = 40
     TitleMinWidth      = 20
     PathMinWidth       = 20
@@ -102,8 +103,8 @@ $script:Config = @{
     # ai-title within the last 34KB. Both values leave several times that as headroom.
     HeadScanLines      = 32
     TailScanBytes      = 131072
-    # Characters of the last prompt kept in the index for the preview line. It is shown on a
-    # single line, so anything beyond the widest screen is never seen.
+    # Characters of the last prompt kept in the index for the preview block. It is shown in at
+    # most two lines, so anything beyond two widths of the widest screen is never seen.
     PreviewMaxLength   = 300
 }
 
