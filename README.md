@@ -75,7 +75,7 @@ In the latest per directory view, the search runs over every session first and t
 | `Ctrl+C` | Force quit |
 | `Ctrl+N` | Start a new session in the selected project. It appears in the list a few seconds after its first message |
 | `Ctrl+P` | Pin the selected session to the top of the list, or unpin it. Pinned sessions show `*` at the start of the row, stay above the others in date order, and are never hidden by the latest per directory view |
-| `Ctrl+D` | Move the selected session to the Recycle Bin. Press `y` to confirm, any other key to cancel. Running sessions cannot be deleted |
+| `Ctrl+D` | Move the selected session to the Recycle Bin. In the latest-per-directory view, every session of its directory goes at once, except running and pinned ones (a pinned row is deleted alone). Press `y` to confirm, any other key to cancel. Running sessions cannot be deleted |
 | `Ctrl+R` | Rebuild the session index (rescan, ignoring the cache). Keeps the search text and the selected session |
 
 ## How it works
@@ -114,7 +114,7 @@ A session started with `claude --bg` (or from agent view) has no window. `Enter`
 
 ### Deleting sessions
 
-`Ctrl+D` sends the session's jsonl and the folder of the same name (`<uuid>\subagents`, etc.) to the Recycle Bin. Restoring them and pressing `Ctrl+R` brings the session back. Related data such as `file-history` is left in place and does not affect Claude Code. Running sessions are refused, because Claude keeps appending after the file is gone and leaves a jsonl with missing history. The tool deletes nothing but a `<ProjectsDir>\<project>\<session ID>.jsonl` file and its folder of the same name. If `ProjectsDir` is on a drive without a Recycle Bin, such as a network share, Windows deletes the items permanently, without warning.
+`Ctrl+D` sends the session's jsonl and the folder of the same name (`<uuid>\subagents`, etc.) to the Recycle Bin. Restoring them and pressing `Ctrl+R` brings the session back. Related data such as `file-history` is left in place and does not affect Claude Code. Running sessions are refused, because Claude keeps appending after the file is gone and leaves a jsonl with missing history. In the latest-per-directory view, `Ctrl+D` deletes every session of the selected row's directory that matches the search, leaving running and pinned ones in place; the confirmation shows how many go and how many stay. If some of them fail, the rest are still deleted and the notice gives both counts. The tool deletes nothing but a `<ProjectsDir>\<project>\<session ID>.jsonl` file and its folder of the same name. If `ProjectsDir` is on a drive without a Recycle Bin, such as a network share, Windows deletes the items permanently, without warning.
 
 ## Session retention
 

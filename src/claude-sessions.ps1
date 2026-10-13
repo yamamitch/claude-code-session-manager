@@ -1664,6 +1664,33 @@ function Get-LatestPerDirectory {
     return @{ Sessions = $rows.ToArray(); HiddenCounts = $hiddenCounts }
 }
 
+function Get-DirectoryDeleteTargets {
+    <#
+    Picks the sessions Ctrl+D deletes at once in the latest per directory view: those of
+    $Sessions (the search results) that share the working directory $Cwd, except running and
+    pinned ones. Returns @{ Targets = sessions to delete; ExcludedCount = sessions of the
+    directory left out as running or pinned }.
+    #>
+    param(
+        [Parameter(Mandatory)][AllowEmptyCollection()][object[]]$Sessions,
+        [AllowNull()][AllowEmptyString()][string]$Cwd,
+        [Parameter(Mandatory)][hashtable]$RunningIds,
+        [Parameter(Mandatory)][hashtable]$PinnedIds
+    )
+    $key = Get-DirectoryKey -Cwd $Cwd
+    $targets = [System.Collections.Generic.List[object]]::new()
+    $excluded = 0
+    foreach ($session in $Sessions) {
+        if ((Get-DirectoryKey -Cwd $session.Cwd) -ne $key) { continue }
+        if ($RunningIds.ContainsKey($session.SessionId) -or $PinnedIds.ContainsKey($session.SessionId)) {
+            $excluded++
+        } else {
+            $targets.Add($session)
+        }
+    }
+    return @{ Targets = $targets.ToArray(); ExcludedCount = $excluded }
+}
+
 function Get-PinnedIds {
     <#
     Reads the pinned session IDs from PinsPath as a SessionId -> $true table. A missing or
@@ -2116,7 +2143,8 @@ function Show-SessionMenu {
     $runningSignature = ''
     $notice = $null
     $noticeExpiry = [DateTime]::MinValue
-    # Session awaiting delete confirmation after Ctrl+D. While pending, the question stays on the notice line.
+    # Sessions awaiting delete confirmation after Ctrl+D (an array: one session, or a whole
+    # directory in the latest per directory view). While pending, the question stays on the notice line.
     $pendingDelete = $null
     # Set by Esc on an empty search. The next key decides: Esc quits, anything else cancels.
     # While set, the prompt stays on the notice line, as with $pendingDelete.
@@ -2281,23 +2309,41 @@ function Show-SessionMenu {
                 # answer. Passing it on to normal handling would add keys like n to the search
                 # term, so anything other than y cancels and is discarded.
                 if ($pendingDelete) {
-                    $target = $pendingDelete
+                    $targets = $pendingDelete
                     $pendingDelete = $null
                     $notice = $null
                     if (-not $isCtrl -and ($key.KeyChar -eq 'y' -or $key.KeyChar -eq 'Y')) {
-                        $result = Remove-ClaudeSession -Session $target
-                        if ($result) {
-                            $notice = $result
-                        } else {
-                            $Sessions = @($Sessions | Where-Object { $_.SessionId -ne $target.SessionId })
+                        # Every session is tried even after a failure; the ones already in the
+                        # Recycle Bin cannot be put back, so stopping would only leave the rest.
+                        $removedIds = @{}
+                        $failedCount = 0
+                        $firstError = $null
+                        foreach ($target in $targets) {
+                            $result = Remove-ClaudeSession -Session $target
+                            if ($result) {
+                                $failedCount++
+                                if (-not $firstError) { $firstError = $result }
+                            } else {
+                                $removedIds[$target.SessionId] = $true
+                            }
+                        }
+                        if ($removedIds.Count -gt 0) {
+                            $Sessions = @($Sessions | Where-Object { -not $removedIds.ContainsKey($_.SessionId) })
                             $knownIds = Get-SessionIdSet -Sessions $Sessions
-                            if ($pinnedIds.ContainsKey($target.SessionId)) {
-                                $pinnedIds.Remove($target.SessionId)
+                            $unpinned = @($removedIds.Keys | Where-Object { $pinnedIds.ContainsKey($_) })
+                            if ($unpinned.Count -gt 0) {
+                                foreach ($id in $unpinned) { $pinnedIds.Remove($id) }
                                 # A stale pin is harmless and dropped at the next start, so a failure is ignored.
                                 try { Save-PinnedIds -PinnedIds $pinnedIds } catch { }
                             }
                             . $updateView
-                            $notice = $script:Text.MovedToTrash
+                        }
+                        $notice = if ($failedCount -eq 0) {
+                            if ($targets.Count -eq 1) { $script:Text.MovedToTrash } else { $script:Text.MovedToTrashCount -f $removedIds.Count }
+                        } elseif ($targets.Count -eq 1) {
+                            $firstError
+                        } else {
+                            $script:Text.DeletePartiallyFailed -f $removedIds.Count, $failedCount, $firstError
                         }
                         $noticeExpiry = [DateTime]::UtcNow.AddMilliseconds($script:Config.NoticeDurationMs)
                     }
@@ -2410,15 +2456,36 @@ function Show-SessionMenu {
                         $openMapSignature = Get-OpenMapSignature -OpenMap $openMap
                         $lastPoll = [DateTime]::UtcNow
                         # A session opened moments ago is running even before it records itself.
-                        if ($openMap.ContainsKey($target.SessionId) -or
-                            (Test-RecentLaunch -Launches $recentLaunches -Key $target.SessionId `
-                                -GraceMs $script:Config.LaunchGraceMs -Now $lastPoll)) {
+                        $deleteRunningIds = Get-RunningIds -OpenMap $openMap -Launches $recentLaunches -Now $lastPoll
+                        # In the latest per directory view the whole directory of the row goes at
+                        # once (running and pinned sessions left out), so the sessions hidden behind
+                        # it need no trip to the all sessions view. A pinned row is still deleted
+                        # alone: it was chosen explicitly, while pins are what the bulk delete keeps.
+                        $excludedCount = 0
+                        $deleteTargets = if ($latestPerDirectory -and -not $pinnedIds.ContainsKey($target.SessionId)) {
+                            $picked = Get-DirectoryDeleteTargets -Sessions $matched -Cwd $target.Cwd `
+                                -RunningIds $deleteRunningIds -PinnedIds $pinnedIds
+                            $excludedCount = $picked.ExcludedCount
+                            , $picked.Targets
+                        } elseif ($deleteRunningIds.ContainsKey($target.SessionId)) {
+                            , @()
+                        } else {
+                            , @($target)
+                        }
+                        if ($deleteTargets.Count -eq 0) {
                             $notice = $script:Text.CannotDeleteLive
                             $noticeExpiry = [DateTime]::UtcNow.AddMilliseconds($script:Config.NoticeDurationMs)
                         } else {
-                            $name = if ($target.Title) { $target.Title } else { $target.SessionId }
-                            $pendingDelete = $target
-                            $notice = $script:Text.ConfirmDelete -f $name
+                            $pendingDelete = $deleteTargets
+                            $dirName = if ($target.Cwd) { Get-ProjectName -Cwd $target.Cwd } else { '' }
+                            $notice = if ($deleteTargets.Count -eq 1) {
+                                $only = $deleteTargets[0]
+                                $script:Text.ConfirmDelete -f $(if ($only.Title) { $only.Title } else { $only.SessionId })
+                            } elseif ($excludedCount -gt 0) {
+                                $script:Text.ConfirmDeleteDirectoryExcluded -f $dirName, $deleteTargets.Count, $excludedCount
+                            } else {
+                                $script:Text.ConfirmDeleteDirectory -f $dirName, $deleteTargets.Count
+                            }
                         }
                     }
                 }

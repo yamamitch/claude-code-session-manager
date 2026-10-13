@@ -1850,6 +1850,41 @@ Describe 'Get-LatestPerDirectory' {
     }
 }
 
+Describe 'Get-DirectoryDeleteTargets' {
+    BeforeAll {
+        $script:all = @(
+            [pscustomobject]@{ SessionId = 'a1'; Cwd = 'C:\work\a' }
+            [pscustomobject]@{ SessionId = 'b1'; Cwd = 'C:\work\b' }
+            [pscustomobject]@{ SessionId = 'a2'; Cwd = 'c:/WORK/a/' }
+            [pscustomobject]@{ SessionId = 'a3'; Cwd = 'C:\work\a' }
+            [pscustomobject]@{ SessionId = 'a4'; Cwd = 'C:\work\a' }
+        )
+    }
+    It 'picks every session of the directory, treating case and separators as the same' {
+        $picked = Get-DirectoryDeleteTargets -Sessions $script:all -Cwd 'C:\work\a' -RunningIds @{} -PinnedIds @{}
+        @($picked.Targets | ForEach-Object { $_.SessionId }) | Should -Be @('a1', 'a2', 'a3', 'a4')
+        $picked.ExcludedCount | Should -Be 0
+    }
+    It 'leaves running and pinned sessions out and counts them' {
+        $picked = Get-DirectoryDeleteTargets -Sessions $script:all -Cwd 'C:\work\a' `
+            -RunningIds @{ a1 = $true } -PinnedIds @{ a3 = $true; b1 = $true }
+        @($picked.Targets | ForEach-Object { $_.SessionId }) | Should -Be @('a2', 'a4')
+        $picked.ExcludedCount | Should -Be 2
+    }
+    It 'picks only from the sessions it is given (the search results)' {
+        $picked = Get-DirectoryDeleteTargets -Sessions @($script:all[0], $script:all[3]) -Cwd 'C:\work\a' -RunningIds @{} -PinnedIds @{}
+        @($picked.Targets | ForEach-Object { $_.SessionId }) | Should -Be @('a1', 'a3')
+    }
+    It 'returns an array for a single target and an empty one when all are kept' {
+        $single = Get-DirectoryDeleteTargets -Sessions $script:all -Cwd 'C:\work\b' -RunningIds @{} -PinnedIds @{}
+        $single.Targets -is [object[]] | Should -BeTrue
+        $single.Targets.Count | Should -Be 1
+        $none = Get-DirectoryDeleteTargets -Sessions $script:all -Cwd 'C:\work\b' -RunningIds @{ b1 = $true } -PinnedIds @{}
+        $none.Targets.Count | Should -Be 0
+        $none.ExcludedCount | Should -Be 1
+    }
+}
+
 Describe 'Pins' {
     BeforeEach {
         $script:savedConfig = $script:Config.Clone()

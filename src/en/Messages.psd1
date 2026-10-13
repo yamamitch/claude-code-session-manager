@@ -44,10 +44,18 @@
     InvalidDeletePath  = 'Invalid path to delete: {0}'
     DeleteFailed       = 'Failed to delete: {0}'
     MovedToTrash       = 'Moved to the Recycle Bin'
+    # {0}: sessions moved
+    MovedToTrashCount  = 'Moved {0} sessions to the Recycle Bin'
+    # {0}: sessions moved, {1}: sessions that failed, {2}: the first error
+    DeletePartiallyFailed = 'Moved {0} sessions, {1} failed: {2}'
     Pinned             = 'Pinned to the top'
     Unpinned           = 'Unpinned'
     PinSaveFailed      = 'Failed to save pins: {0}'
     ConfirmDelete      = 'Move "{0}" to the Recycle Bin? [y/N]'
+    # Ctrl+D on a directory in the latest per directory view. {0}: directory name, {1}: sessions
+    # to delete, {2}: running or pinned sessions of the directory left out.
+    ConfirmDeleteDirectory = 'Move {1} sessions of "{0}" to the Recycle Bin? [y/N]'
+    ConfirmDeleteDirectoryExcluded = 'Move {1} sessions of "{0}" to the Recycle Bin? ({2} running or pinned kept) [y/N]'
     # {0}: current, {1}: total
     Rebuilding         = 'Rebuilding index... [{0}/{1}]'
     Loading            = 'Loading sessions... [{0}/{1}]'
